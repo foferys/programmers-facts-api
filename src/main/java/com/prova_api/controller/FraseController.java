@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -39,10 +40,14 @@ public class FraseController {
         return response;
     }
 
-    @GetMapping("/")
-    public Map<String, List<Phrase>> getAllByType(@RequestParam String type) {
+    @GetMapping("/{type}")
+    public Map<String, List<Phrase>> getAllByType(@PathVariable String type) {
 
-        
+        // Imposta un valore predefinito se 'type' è nullo, vuoto o troppo corto
+        // it would be better if we create a method that check if 1/3 word (frontend/backend/generic) is there
+        if(type == null || type.isEmpty() || type.length() < 5) {
+            type = "generic";
+        }
         List<Phrase> phrases = phrasesRepository.findByType(type);
         System.out.println("il tipo: " + type);
 
