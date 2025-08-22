@@ -42,6 +42,8 @@ public class FraseController {
 
     @GetMapping("/{type}")
     public Map<String, List<Phrase>> getAllByType(@PathVariable String type) {
+    // public Map<String, List<Phrase>> getAllByType(@RequestParam String type) { // -> using the @RequestParam we can leave
+    //@GetMapping("/") for the mapping but in the browser we have to use http://localhost:8080/getPhrase/?type=frontend
 
         // Imposta un valore predefinito se 'type' è nullo, vuoto o troppo corto
         // it would be better if we create a method that check if 1/3 word (frontend/backend/generic) is there
