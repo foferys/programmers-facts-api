@@ -24,7 +24,14 @@ public class HomeController {
     public String home(Model model) throws JsonProcessingException {
 
         Phrase randomphrase = pRepository.findRandomPhrase();
-        model.addAttribute("randomexample", randomphrase.getPhrase());
+
+        if(randomphrase != null) {
+
+            model.addAttribute("randomexample", randomphrase.getPhrase());
+        }else {
+            model.addAttribute("randomexample", "Errore nel db, controlla che non sia vuoto");
+
+        }
 
 
         Map<String, Phrase> response = new HashMap<>();

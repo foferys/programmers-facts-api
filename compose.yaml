@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+  server:
+    build:
+      context: .
+    ports:
+      - "8080:8080"   # Spring Boot esposto sull'host
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/programmers-api
+      SPRING_DATASOURCE_USERNAME: fofedev
+      SPRING_DATASOURCE_PASSWORD: mypass
+
+  db:
+    image: mysql:8
+    restart: always
+    environment:
+      MYSQL_DATABASE: programmers-api
+      MYSQL_USER: fofedev
+      MYSQL_PASSWORD: mypass
+      MYSQL_ROOT_PASSWORD: rootpass
+    volumes:
+      - db-data:/var/lib/mysql   # persiste i dati tra i container
+    # Non esponiamo la porta 3306 sull'host per evitare conflitti
+    # Se vuoi accedere al DB dall'host, aggiungi: ports: - "3307:3306"
+    ports:
+      - "3307:3306"  # porta 3307 sull'host mappata sulla 3306 del container
+
+volumes:
+  db-data:
