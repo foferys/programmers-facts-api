@@ -25,13 +25,24 @@ public class HomeController {
 
         Phrase randomphrase = pRepository.findRandomPhrase();
 
-        if(randomphrase != null) {
-
-            model.addAttribute("randomexample", randomphrase.getPhrase());
-        }else {
-            model.addAttribute("randomexample", "Errore nel db, controlla che non sia vuoto");
-
+        try {
+            
+            if(randomphrase != null) {
+    
+                model.addAttribute("randomexample", randomphrase.getPhrase());
+            }else {
+                model.addAttribute("randomexample", "Errore nel db, controlla che non sia vuoto");
+                
+            }
+            
+        } catch (Exception e) {
+            
+            model.addAttribute("randomexample", "Errore interno del server");
+            
+            System.out.println(e.getCause());
+            e.printStackTrace();
         }
+
 
 
         Map<String, Phrase> response = new HashMap<>();
