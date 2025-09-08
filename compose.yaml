@@ -26,7 +26,7 @@ services:
     # Non esponiamo la porta 3306 sull'host per evitare conflitti
     # Se vuoi accedere al DB dall'host, aggiungi: ports: - "3307:3306"
     ports:
-      - "3307:3306"  # porta 3307 sull'host mappata sulla 3306 del container cosi puoi collegarti anche da workbench
+      - "3309:3306"  # porta 3309 sull'host mappata sulla 3306 del container cosi puoi collegarti anche da workbench
 
 volumes:
   db-data:
