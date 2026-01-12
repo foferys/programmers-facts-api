@@ -11,9 +11,13 @@ public interface PhraseRepository extends JpaRepository<Phrase, Integer> {
 
     List<Phrase> findByType(String type);
     
-    @Query(value = "SELECT * FROM phrases ORDER BY RAND() LIMIT 1", nativeQuery = true)
+    // con mysql
+    // @Query(value = "SELECT * FROM phrases ORDER BY RAND() LIMIT 1", nativeQuery = true)
+    // Phrase findRandomPhrase();
+    
+    // con postgres
+    @Query(value = "SELECT * FROM phrases ORDER BY RANDOM() LIMIT 1", nativeQuery = true)
     Phrase findRandomPhrase();
-
 
     
 }
