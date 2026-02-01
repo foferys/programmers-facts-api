@@ -1,10 +1,7 @@
 package com.prova_api.controller;
-
 import org.springframework.web.bind.annotation.RestController;
-
 import com.prova_api.phrases.Phrase;
 import com.prova_api.services.PhraseRepository;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +10,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.CacheControl;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -116,14 +114,16 @@ public class FraseController {
      * Status: Spring restituisce automaticamente 200 OK in caso di successo.
      */
     @GetMapping("/random")
-    public Map<String, Phrase> getRandom() {
+    public ResponseEntity<Map<String, Phrase>> getRandom() {
 
         Phrase phrase = phrasesRepository.findRandomPhrase();
 
         Map<String, Phrase> response = new HashMap<>();
         response.put("data", phrase);
 
-        return response;
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.noStore())
+                .body(response);
     }
 
     // ========== MAPPING CON ResponseEntity E STATUS CODE ESPLICITO ==========

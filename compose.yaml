@@ -5,28 +5,51 @@ services:
     build:
       context: .
     ports:
-      - "8080:8080"   # Spring Boot esposto sull'host
+      - "8080:8080"
     depends_on:
-      - db
+      - postgres
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/programmers-api
-      SPRING_DATASOURCE_USERNAME: fofedev
-      SPRING_DATASOURCE_PASSWORD: mypass
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/programmers-api
+      SPRING_DATASOURCE_USERNAME: foferys
+      SPRING_DATASOURCE_PASSWORD: foferys
+    networks:
+      - postgres
 
-  db:
-    image: mysql:8
-    restart: always
+  postgres:
+    container_name: factsapi_container
+    image: postgres:16
     environment:
-      MYSQL_DATABASE: programmers-api
-      MYSQL_USER: fofedev
-      MYSQL_PASSWORD: mypass
-      MYSQL_ROOT_PASSWORD: rootpass
+      POSTGRES_USER: foferys
+      POSTGRES_PASSWORD: foferys
+      POSTGRES_DB: programmers-api
+      PGDATA: /data/postgres
     volumes:
-      - db-data:/var/lib/mysql   # persiste i dati tra i container
-    # Non esponiamo la porta 3306 sull'host per evitare conflitti
-    # Se vuoi accedere al DB dall'host, aggiungi: ports: - "3307:3306"
+      - postgres:/data/postgres
     ports:
-      - "3307:3306"  # porta 3307 sull'host mappata sulla 3306 del container cosi puoi collegarti anche da workbench
+      - "5434:5432"
+    networks:
+      - postgres
+    restart: unless-stopped
+
+  pgadmin:
+    container_name: pgadmin_container_facts
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: pgadmin4@pgadmin.org
+      PGADMIN_DEFAULT_PASSWORD: -admin
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    networks:
+      - postgres
+    restart: unless-stopped
+
+networks:
+  postgres:
+    driver: bridge
 
 volumes:
-  db-data:
+  postgres:
+  pgadmin:
