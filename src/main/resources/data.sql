@@ -1,3 +1,20 @@
+-- =============================================================================
+-- data.sql – Dati iniziali per sviluppo locale (senza Docker)
+-- =============================================================================
+-- A cosa serve data.sql
+-- Uso: sviluppo locale (app avviata senza Docker, es. da IDE).
+-- Comportamento: Spring Boot lo esegue dopo che JPA ha creato/aggiornato le tabelle e inserisce le 25 frasi nella tabella phrases.
+-- Quando non viene usato: in Docker il database è già inizializzato da init-db/, quindi con il profilo docker l’esecuzione di data.sql è disattivata per evitare duplicati.
+-- Quindi non va eliminato: serve per avere dati iniziali quando lavori in locale contro un Postgres vuoto.
+-- =============================================================================
+-- Spring Boot esegue questo file automaticamente se spring.sql.init.mode=always
+-- e spring.jpa.defer-datasource-initialization=true (v. application.properties).
+-- Inserisce le frasi nella tabella "phrases" dopo che JPA/Hibernate ha creato
+-- lo schema. Usato quando avvii l'app in locale contro un DB Postgres vuoto.
+-- Con Docker il DB è già popolato da init-db/, quindi questo file non viene
+-- eseguito (profilo "docker" imposta spring.sql.init.mode=never).
+-- =============================================================================
+
 INSERT INTO phrases (phrase, type) VALUES
 ('Backend developers always say, "It worked on my local server."', 'backend'),
 ('Frontend is 90% making things pretty and 10% crying over browser compatibility.', 'frontend'),

@@ -1,17 +1,76 @@
+# Sviluppo:  docker-compose --profile dev up     → server-dev con volumi (HTML/CSS aggiornati senza rebuild)
+# Produzione: docker-compose --profile prod up   → server come da Dockerfile (deploy)
+# ========================================================
+# differenza sviluppo / produzione
+# PRODUZIONE – servizio server (profilo prod):
+# Usa il Dockerfile così com’è, nessun volume.
+
+# Per avviare:
+# docker-compose --profile prod up
+# (prima build: docker-compose --profile prod up --build).
+# ========================================================
+# SVILUPPO – servizio server-dev (profilo dev):
+# Stessa immagine del Dockerfile, ma con volumi su:
+# ./src/main/resources/templates → /BOOT-INF/classes/templates
+# ./src/main/resources/static → /BOOT-INF/classes/static
+# Profilo Spring: docker,dev (attiva le proprietà di application-dev.properties).
+
+# Per avviare:
+# docker-compose --profile dev up
+# (prima volta: docker-compose --profile dev up --build).
+
+# Comandi da usare:
+# Ambiente	 | Comando
+# Sviluppo	 | docker-compose --profile dev up (o ... up --build la prima volta)
+# Produzione | docker-compose --profile prod up
+
+
 version: "3.9"
 
 services:
+  # Servizio PRODUZIONE: immagine dal Dockerfile, nessun volume (deploy)
   server:
     build:
       context: .
+      dockerfile: Dockerfile
+    image: programmers-facts-api:latest
+    profiles:
+      - prod
     ports:
       - "8080:8080"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
+      SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/programmers-api
       SPRING_DATASOURCE_USERNAME: foferys
       SPRING_DATASOURCE_PASSWORD: foferys
+    networks:
+      - postgres
+
+  # Servizio SVILUPPO: stessa immagine ma con volumi su templates/static (modifiche HTML/CSS senza riavvio)
+  server-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: programmers-facts-api:latest
+    profiles:
+      - dev
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker,dev
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/programmers-api
+      SPRING_DATASOURCE_USERNAME: foferys
+      SPRING_DATASOURCE_PASSWORD: foferys
+    volumes:
+      # Monta template e static così le modifiche si vedono senza ricostruire l'immagine
+      - ./src/main/resources/templates:/BOOT-INF/classes/templates
+      - ./src/main/resources/static:/BOOT-INF/classes/static
     networks:
       - postgres
 
@@ -25,11 +84,20 @@ services:
       PGDATA: /data/postgres
     volumes:
       - postgres:/data/postgres
+      # Script SQL eseguiti solo al primo avvio (DB vuoto): schema + dati fissi, uguali su ogni PC
+      - ./init-db:/docker-entrypoint-initdb.d
     ports:
       - "5434:5432"
     networks:
       - postgres
     restart: unless-stopped
+    # Healthcheck su Postgres: il server Spring parte solo quando il database è davvero pronto. 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U foferys -d programmers-api"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
 
   pgadmin:
     container_name: pgadmin_container_facts
