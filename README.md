@@ -17,7 +17,7 @@ A simple api that returns a random funny fact about programming on a GET request
 ### Example Usage
 
 ``` 
-curl http://localhost:8080/v1/phrases/random
+curl http://localhost:8080/api/v1/phrases/random
 ```
 
 Response
@@ -38,7 +38,7 @@ Response
 <!-- You can request more than one funny fact at a time by using the GET param `count`
 
 ```bash
-curl http://localhost:8080/v1/phrases/random?count=3
+curl http://localhost:8080/api/v1/phrases/random?count=3
 ```
 
 Response
@@ -57,7 +57,7 @@ you can retrieve a list of quotes filtered by a specific type (backend, frontend
 
 
 ```bash
-curl http://localhost:8080/v1/phrases/?type=backend  
+curl http://localhost:8080/api/v1/phrases/by-type?type=backend  
 ```
 
 Response
