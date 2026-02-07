@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RequestParam;
  *
  * Caratteristiche principali di una REST API:
  * - Stateless: ogni richiesta è indipendente, il server non mantiene stato tra le chiamate
- * - Resource-based: le URL identificano risorse (es. /getPhrase/all = tutte le frasi)
+ * - Resource-based: le URL identificano risorse (es. /api/v1/phrases = tutte le frasi)
  * - Utilizzo dei verbi HTTP per le operazioni (GET=leggere, POST=creare, PUT=aggiornare, DELETE=eliminare)
  */
 @RestController
@@ -45,10 +45,10 @@ import org.springframework.web.bind.annotation.RequestParam;
  * In sintesi: ogni metodo che restituisce un tipo (Map, List, Phrase, ecc.) produce una
  * risposta HTTP con quel dato serializzato in JSON e con status code gestito da Spring (vedi sotto).
  */
-@RequestMapping("/getPhrase")
+@RequestMapping("/api/v1/phrases")
 /*
- * Prefisso base per tutti gli endpoint di questo controller.
- * Tutte le URL inizieranno con: http://localhost:8080/getPhrase/...
+ * Prefisso base per tutti gli endpoint di questo controller (versioning API).
+ * Tutte le URL inizieranno con: http://localhost:8080/api/v1/phrases/...
  */
 public class FraseController {
 
@@ -87,13 +87,13 @@ public class FraseController {
 
     /**
      * Restituisce le frasi filtrate per tipo (es. frontend, backend, generic).
-     * Path variable: tipo nella URL (es. /getPhrase/frontend).
+     * Path variable: tipo nella URL (es. /api/v1/phrases/frontend).
      * Status: Spring restituisce automaticamente 200 OK in caso di successo.
      */
     @GetMapping("/{type}")
     public Map<String, List<Phrase>> getAllByType(@PathVariable String type) {
         // public Map<String, List<Phrase>> getAllByType(@RequestParam String type) { // -> using the @RequestParam we can leave
-        //@GetMapping("/") for the mapping but in the browser we have to use http://localhost:8080/getPhrase/?type=frontend
+        //@GetMapping("/") for the mapping but in the browser we have to use http://localhost:8080/api/v1/phrases/?type=frontend
 
         // Imposta un valore predefinito se 'type' è nullo, vuoto o troppo corto
         // it would be better if we create a method that check if 1/3 word (frontend/backend/generic) is there
