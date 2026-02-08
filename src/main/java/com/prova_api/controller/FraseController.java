@@ -1,23 +1,21 @@
 package com.prova_api.controller;
-import org.springframework.web.bind.annotation.RestController;
-import com.prova_api.phrases.Phrase;
-import com.prova_api.services.PhraseRepository;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import com.prova_api.dto.ApiResponse;
+import com.prova_api.dto.PhraseResponseDto;
+import com.prova_api.services.PhraseService;
 import org.springframework.http.CacheControl;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 /**
- * REST API Controller per la gestione delle frasi/citazioni.
+ * Controller REST per la risorsa "frasi/citazioni" (phrases).
+ *  REST API Controller per la gestione delle frasi/citazioni.
  *
  * Questa classe espone endpoint HTTP che seguono il paradigma REST (Representational State Transfer).
  * Una REST API permette di accedere e manipolare risorse tramite richieste HTTP standard (GET, POST, PUT, DELETE)
@@ -27,6 +25,16 @@ import org.springframework.web.bind.annotation.RequestParam;
  * - Stateless: ogni richiesta è indipendente, il server non mantiene stato tra le chiamate
  * - Resource-based: le URL identificano risorse (es. /api/v1/phrases = tutte le frasi)
  * - Utilizzo dei verbi HTTP per le operazioni (GET=leggere, POST=creare, PUT=aggiornare, DELETE=eliminare)
+ * - Utilizzo di codici di stato HTTP standard (200 OK, 204 No Content, 400 Bad Request, 404 Not Found, 500 Internal Server Error)
+ * - Utilizzo di header HTTP per la gestione delle cache, autenticazione, etc.
+ * <p>
+ * Espone solo dati in lettura (GET). Non espone mai l'entità JPA: tutte le risposte
+ * usano {@link PhraseResponseDto} e il wrapper {@link ApiResponse}. Gli errori sono
+ * gestiti dal {@link com.prova_api.exception.GlobalExceptionHandler} (404, 400, 500).
+ * </p>
+ * <p>
+ * Base path: {@code /api/v1/phrases} (versioning API).
+ * </p>
  */
 @RestController
 /*
@@ -52,149 +60,84 @@ import org.springframework.web.bind.annotation.RequestParam;
  */
 public class FraseController {
 
-    @Autowired
-    private PhraseRepository phrasesRepository;
+    private final PhraseService phraseService;
 
-    // ========== MAPPING CON STATUS CODE AUTOMATICO (Spring) ==========
-    /*
-     * Nei mapping sottostanti NON usiamo ResponseEntity: il valore di ritorno è solo il body.
-     * Spring assegna automaticamente:
-     * - HTTP 200 OK quando il metodo termina senza eccezioni (successo).
-     * - HTTP 500 Internal Server Error se viene lanciata un'eccezione non gestita.
-     *
-     * HTTP Status Code (principali):
-     * - 200 OK: richiesta GET/PUT riuscita, risorsa restituita/aggiornata.
-     * - 201 Created: risorsa creata con successo (tipicamente dopo POST).
-     * - 204 No Content: successo ma nessun contenuto da restituire (es. dopo DELETE).
-     * - 400 Bad Request: richiesta malformata o parametri non validi.
-     * - 404 Not Found: risorsa richiesta non trovata.
-     * - 500 Internal Server Error: errore lato server.
-     */
+    public FraseController(PhraseService phraseService) {
+        this.phraseService = phraseService;
+    }
 
     /**
-     * Restituisce tutte le frasi presenti nel database.
-     * Status: Spring restituisce automaticamente 200 OK in caso di successo.
+     * GET /api/v1/phrases/all — Restituisce tutte le frasi.
+     * Risposta: 200 OK, body { "data": [ { "id", "phrase", "type" }, ... ] }.
      */
     @GetMapping("/all")
-    public Map<String, List<Phrase>> getAll() {
-
-        List<Phrase> phrases = phrasesRepository.findAll();
-        Map<String, List<Phrase>> response = new HashMap<>();
-        response.put("data", phrases);
-        return response;
-
+    public ApiResponse<List<PhraseResponseDto>> getAll() {
+        List<PhraseResponseDto> data = phraseService.findAll();
+        return new ApiResponse<>(data);
     }
 
     /**
-     * Restituisce le frasi filtrate per tipo (es. frontend, backend, generic).
-     * Path variable: tipo nella URL (es. /api/v1/phrases/frontend).
-     * Status: Spring restituisce automaticamente 200 OK in caso di successo.
+     * GET /api/v1/phrases/{type} — Frasi per tipo (path variable).
+     * Se type non è valido o è troppo corto, viene usato "generic" come default (comportamento legacy).
+     * Risposta: 200 OK, body { "data": [ ... ] }.
      */
     @GetMapping("/{type}")
-    public Map<String, List<Phrase>> getAllByType(@PathVariable String type) {
-        // public Map<String, List<Phrase>> getAllByType(@RequestParam String type) { // -> using the @RequestParam we can leave
-        //@GetMapping("/") for the mapping but in the browser we have to use http://localhost:8080/api/v1/phrases/?type=frontend
-
-        // Imposta un valore predefinito se 'type' è nullo, vuoto o troppo corto
-        // it would be better if we create a method that check if 1/3 word (frontend/backend/generic) is there
-        if(type == null || type.isEmpty() || type.length() < 5) {
-            type = "generic";
-        }
-        List<Phrase> phrases = phrasesRepository.findByType(type);
-        System.out.println("il tipo: " + type);
-
-        Map<String, List<Phrase>> response = new HashMap<>();
-        response.put("data", phrases);
-
-        return response;
+    public ApiResponse<List<PhraseResponseDto>> getAllByType(@PathVariable String type) {
+        List<PhraseResponseDto> data = phraseService.findByTypeOrDefault(type);
+        return new ApiResponse<>(data);
     }
 
     /**
-     * Restituisce una frase casuale.
-     * Status: Spring restituisce automaticamente 200 OK in caso di successo.
+     * GET /api/v1/phrases/random — Una frase casuale.
+     * Con cache no-store per evitare che la risposta sia cachata.
+     * Se non ci sono frasi, il servizio può restituire null: qui restituiamo 200 con body null (o si può lanciare PhraseNotFoundException per 404).
      */
     @GetMapping("/random")
-    public ResponseEntity<Map<String, Phrase>> getRandom() {
-
-        Phrase phrase = phrasesRepository.findRandomPhrase();
-
-        Map<String, Phrase> response = new HashMap<>();
-        response.put("data", phrase);
-
+    public ResponseEntity<ApiResponse<PhraseResponseDto>> getRandom() {
+        PhraseResponseDto data = phraseService.findRandomOrNull();
         return ResponseEntity.ok()
                 .cacheControl(CacheControl.noStore())
-                .body(response);
+                .body(new ApiResponse<>(data));
     }
 
-    // ========== MAPPING CON ResponseEntity E STATUS CODE ESPLICITO ==========
-    /*
-     * ResponseEntity<T> permette di controllare esplicitamente:
-     * - body della risposta (il dato)
-     * - status code HTTP (200, 201, 404, 400, ecc.)
-     * - header opzionali
-     *
-     * Utile quando lo status deve dipendere dalla logica (es. 404 se non trovato, 201 se creato).
-     */
-
     /**
-     * Esempio: GET per ID con status esplicito.
-     * - 200 OK se la frase esiste.
-     * - 404 Not Found se l'ID non esiste nel database.
+     * GET /api/v1/phrases/id/{id} — Frase per ID.
+     * Se l'ID non esiste viene lanciata {@link com.prova_api.exception.PhraseNotFoundException} → 404.
+     * Se l'ID non è numerico, MethodArgumentTypeMismatchException → 400 (gestita dal GlobalExceptionHandler).
      */
     @GetMapping("/id/{id}")
-    public ResponseEntity<Map<String, Phrase>> getById(@PathVariable int id) {
-        
-        Optional<Phrase> optional = phrasesRepository.findById(id);
-        if (optional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-            // 404 Not Found: risorsa non trovata
-        }
-        Map<String, Phrase> body = new HashMap<>();
-        body.put("data", optional.get());
-        return ResponseEntity.ok(body);
-        // 200 OK + body
+    public ApiResponse<PhraseResponseDto> getById(@PathVariable int id) {
+        PhraseResponseDto data = phraseService.findById(id);
+        return new ApiResponse<>(data);
     }
 
     /**
-     * Esempio: risposta 204 No Content (successo senza body).
-     * Endpoint di esempio che "conferma" un'operazione senza restituire dati.
+     * GET /api/v1/phrases/ping — Health/ping, nessun body.
+     * Risposta: 204 No Content.
      */
     @GetMapping("/ping")
     public ResponseEntity<Void> ping() {
         return ResponseEntity.noContent().build();
-        // 204 No Content
     }
 
     /**
-     * Esempio: validazione parametro con 400 Bad Request.
-     * Se "type" è vuoto o troppo corto, restituiamo 400 invece di usare un default.
+     * GET /api/v1/phrases/by-type?type=backend — Frasi per tipo (query param).
+     * Parametro type obbligatorio e deve essere frontend, backend o generic; altrimenti 400.
      */
     @GetMapping("/by-type")
-    public ResponseEntity<Map<String, List<Phrase>>> getByTypeQuery(@RequestParam(required = false) String type) {
-        if (type == null || type.trim().length() < 3) {
-            return ResponseEntity.badRequest().build();
-            // 400 Bad Request: parametro mancante o non valido
-        }
-        List<Phrase> phrases = phrasesRepository.findByType(type.trim());
-        Map<String, List<Phrase>> response = new HashMap<>();
-        response.put("data", phrases);
-        return ResponseEntity.ok(response);
-        // 200 OK + body
+    public ApiResponse<List<PhraseResponseDto>> getByTypeQuery(@RequestParam(required = false) String type) {
+        phraseService.validateTypeRequired(type);
+        List<PhraseResponseDto> data = phraseService.findByType(type);
+        return new ApiResponse<>(data);
     }
 
     /**
-     * Esempio: risposta con body e status 200 usando ResponseEntity.
-     * Equivalente concettuale a getRandom() ma con status esplicito.
+     * GET /api/v1/phrases/random-explicit — Una frase casuale con status esplicito.
+     * 200 OK se c'è almeno una frase; 404 se il database non contiene frasi (PhraseNotFoundException).
      */
     @GetMapping("/random-explicit")
-    public ResponseEntity<Map<String, Phrase>> getRandomExplicit() {
-        Phrase phrase = phrasesRepository.findRandomPhrase();
-        if (phrase == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-        Map<String, Phrase> response = new HashMap<>();
-        response.put("data", phrase);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
-        // 200 OK esplicito + body
+    public ApiResponse<PhraseResponseDto> getRandomExplicit() {
+        PhraseResponseDto data = phraseService.findRandom();
+        return new ApiResponse<>(data);
     }
 }

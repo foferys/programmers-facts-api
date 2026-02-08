@@ -3,36 +3,50 @@ programming funny quotes
 [![Contributors](https://img.shields.io/badge/contributors-1-46CC12)](#contributors-)
 [![Java](https://img.shields.io/badge/Java-%23ED8B00.svg?logo=openjdk&logoColor=white)](#)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-6DB33F?logo=springboot&logoColor=fff)](#)
-[![MySQL](https://img.shields.io/badge/MySQL-4479A1?logo=mysql&logoColor=fff)](#)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=fff)](#)
 [![Git](https://img.shields.io/badge/Git-F05032?logo=git&logoColor=fff)](#)
 
 [![pp](https://img.shields.io/badge/Buy_me_a_coffee-3775A9?logo=paypal)](https://www.paypal.com/paypalme/foferys)
 [![Hugging Face](https://img.shields.io/badge/Hugging%20Face-FFD21E?logo=huggingface&logoColor=000)](#Dedication-)
 
 
-## Description:
+## Description
 
-A simple api that returns a random funny fact about programming on a GET request
+API REST in sola lettura che espone **citazioni/fatti divertenti** sui programmatori (tipi: `backend`, `frontend`, `generic`) in JSON. Base URL: `http://localhost:8080/api/v1/phrases`. Documentazione dettagliata e stato dei miglioramenti: vedi [PDR-Programmers-Facts-API.md](./PDR-Programmers-Facts-API.md).
 
 ### Setup (variabili d'ambiente)
 
 Le credenziali del database **non** sono nel repository. Prima di avviare l'app o Docker:
 
-1. Copia `.env.example` in `.env`:  
-   `cp .env.example .env` (Linux/macOS) o rinomina/copia a mano su Windows.
-2. Apri `.env` e inserisci i valori per:
-   - **Docker**: `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` (obbligatorie per `docker-compose`).
-   - **Esecuzione locale** (Spring senza Docker): `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD` (es. `jdbc:postgresql://localhost:5434/programmers-api` se Postgres è in locale sulla porta 5434).
+1. Copy `.env.example` to `.env`:  
+   `cp .env.example .env` (Linux/macOS) or rename/copy by hand on Windows.
+2. Open `.env` and enter values ​​for:
+- **Docker**: `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` (required for `docker-compose`).
+- **Local Execution** (Spring without Docker): `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD` (e.g., `jdbc:postgresql://localhost:5434/programmers-api` if Postgres is running locally on port 5434).
 
-Non committare mai il file `.env` (è in `.gitignore`).
+Never commit the `.env` file (it's in `.gitignore`).
+
+### Key endpoints (base: `/api/v1/phrases`)
+
+| Metodo | Endpoint | Descrizione |
+|--------|----------|-------------|
+| GET | `/all` | All sentences |
+| GET | `/random` | Una frase casuale |
+| GET | `/random-explicit` | A random phrase (404 se no phrase) |
+| GET | `/{type}` |Phrases by type (frontend, backend, generic); invalid type → "generic" |
+| GET | `/by-type?type=backend` | Phrases for type (query param; type required and valid, otherwise 400) |
+| GET | `/id/{id}` | Phrase for ID (404 if nonexistent) |
+| GET | `/ping` | Health check (204 No Content) |
+
+In case of error the response is JSON: `{ "error": "...", "code": "400|404|500", "timestamp": "..." }`.
 
 ### Example Usage
 
-``` 
+```bash
 curl http://localhost:8080/api/v1/phrases/random
 ```
 
-Response
+Response:
 
 ```json
 {
@@ -91,6 +105,27 @@ Response
 }
 
 ```
+
+### Pubblicare l’API online (gratis)
+
+Per esporre questa API su internet in modo gratuito puoi usare uno di questi approcci:
+
+1. **Render** (consigliato per Spring Boot + Postgres)
+   - [render.com](https://render.com): piano free con Web Service + PostgreSQL gestito.
+   - Push del codice su GitHub, collegamento del repo a Render, configurazione del servizio Java (build `./mvnw -DskipTests package`, comando `java -jar target/*.jar`) e del database; le variabili d’ambiente (URL DB, user, password) si impostano nella dashboard.
+
+2. **Railway**
+   - [railway.app](https://railway.app): free tier con limite mensile; supporta Spring Boot e Postgres.
+   - Deploy da GitHub; aggiungi un servizio PostgreSQL e collega le variabili al tuo progetto Spring.
+
+3. **Fly.io**
+   - [fly.io](https://fly.io): free tier; richiede un `Dockerfile` o uso di buildpack.
+   - Puoi usare il tuo `compose.yaml` come riferimento per il Dockerfile (Java + esposto 8080, variabili per il DB). Il DB può essere Postgres su Fly o un servizio esterno.
+
+4. **VPS free tier (Oracle Cloud, ecc.)**
+   - Oracle Cloud offre sempre-free tier con VM; puoi installare Java e Postgres a mano e far girare l’app (es. con `systemd` o in Docker). Richiede più configurazione (rete, firewall, dominio opzionale).
+
+**Suggerimenti**: usa sempre variabili d’ambiente per URL, user e password del database; non committare `.env`. Per produzione imposta `SPRING_PROFILES_ACTIVE=prod` (o un profilo dedicato) e, se possibile, HTTPS (Render/Railway/Fly lo gestiscono in automatico).
 
 ### Dedication
 
