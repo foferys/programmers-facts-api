@@ -106,26 +106,6 @@ Response
 
 ```
 
-### Pubblicare l’API online (gratis)
-
-Per esporre questa API su internet in modo gratuito puoi usare uno di questi approcci:
-
-1. **Render** (consigliato per Spring Boot + Postgres)
-   - [render.com](https://render.com): piano free con Web Service + PostgreSQL gestito.
-   - Push del codice su GitHub, collegamento del repo a Render, configurazione del servizio Java (build `./mvnw -DskipTests package`, comando `java -jar target/*.jar`) e del database; le variabili d’ambiente (URL DB, user, password) si impostano nella dashboard.
-
-2. **Railway**
-   - [railway.app](https://railway.app): free tier con limite mensile; supporta Spring Boot e Postgres.
-   - Deploy da GitHub; aggiungi un servizio PostgreSQL e collega le variabili al tuo progetto Spring.
-
-3. **Fly.io**
-   - [fly.io](https://fly.io): free tier; richiede un `Dockerfile` o uso di buildpack.
-   - Puoi usare il tuo `compose.yaml` come riferimento per il Dockerfile (Java + esposto 8080, variabili per il DB). Il DB può essere Postgres su Fly o un servizio esterno.
-
-4. **VPS free tier (Oracle Cloud, ecc.)**
-   - Oracle Cloud offre sempre-free tier con VM; puoi installare Java e Postgres a mano e far girare l’app (es. con `systemd` o in Docker). Richiede più configurazione (rete, firewall, dominio opzionale).
-
-**Suggerimenti**: usa sempre variabili d’ambiente per URL, user e password del database; non committare `.env`. Per produzione imposta `SPRING_PROFILES_ACTIVE=prod` (o un profilo dedicato) e, se possibile, HTTPS (Render/Railway/Fly lo gestiscono in automatico).
 
 ### Dedication
 
