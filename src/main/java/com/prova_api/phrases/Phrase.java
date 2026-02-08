@@ -6,8 +6,16 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+/**
+ * Entità JPA che mappa la tabella {@code phrases} del database.
+ * <p>
+ * Questa classe è usata solo a livello di persistenza e servizi; non deve essere
+ * esposta direttamente dall'API REST. L'esposizione avviene tramite
+ * {@link com.prova_api.dto.PhraseResponseDto} per disaccoppiare il contratto API dal modello JPA.
+ * </p>
+ */
 @Entity
-@Table(name="phrases")
+@Table(name = "phrases")
 public class Phrase {
 
     @Id
