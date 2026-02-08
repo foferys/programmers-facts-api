@@ -48,6 +48,8 @@
 
 ### 4.1 Avvio
 
+**Variabili d'ambiente:** copia `.env.example` in `.env` e compila le credenziali (vedi README). Nessun dato sensibile in repository.
+
 - **Locale (senza Docker)**  
   - Avviare PostgreSQL (es. sulla porta 5434, come in `application.properties`).  
   - Eseguire l’applicazione Spring Boot (IDE o `./mvnw spring-boot:run`).  

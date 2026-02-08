@@ -32,5 +32,7 @@ build/
 ### VS Code ###
 .vscode/
 
-# config file
-./src/main/resources/application.properties
+# Variabili d'ambiente (credenziali): non committare
+.env
+
+# (application.properties è in repo con solo placeholder ${VAR}; i valori vengono da .env / variabili d'ambiente)

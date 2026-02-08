@@ -23,7 +23,9 @@
 # Ambiente	 | Comando
 # Sviluppo	 | docker-compose --profile dev up (o ... up --build la prima volta)
 # Produzione | docker-compose --profile prod up
-
+#
+# Variabili d'ambiente: copia .env.example in .env e inserisci le credenziali (POSTGRES_USER,
+# POSTGRES_PASSWORD, POSTGRES_DB). Nessun dato sensibile va committato; vedi README.
 
 version: "3.9"
 
@@ -43,9 +45,9 @@ services:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/programmers-api
-      SPRING_DATASOURCE_USERNAME: foferys
-      SPRING_DATASOURCE_PASSWORD: foferys
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
     networks:
       - postgres
 
@@ -64,9 +66,9 @@ services:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker,dev
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/programmers-api
-      SPRING_DATASOURCE_USERNAME: foferys
-      SPRING_DATASOURCE_PASSWORD: foferys
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       # Monta template e static così le modifiche si vedono senza ricostruire l'immagine
       - ./src/main/resources/templates:/BOOT-INF/classes/templates
@@ -78,9 +80,9 @@ services:
     container_name: factsapi_container
     image: postgres:16
     environment:
-      POSTGRES_USER: foferys
-      POSTGRES_PASSWORD: foferys
-      POSTGRES_DB: programmers-api
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
       PGDATA: /data/postgres
     volumes:
       - postgres:/data/postgres
@@ -93,7 +95,7 @@ services:
     restart: unless-stopped
     # Healthcheck su Postgres: il server Spring parte solo quando il database è davvero pronto. 
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U foferys -d programmers-api"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 3s
       timeout: 3s
       retries: 10
