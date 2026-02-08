@@ -14,6 +14,18 @@ programming funny quotes
 
 A simple api that returns a random funny fact about programming on a GET request
 
+### Setup (variabili d'ambiente)
+
+Le credenziali del database **non** sono nel repository. Prima di avviare l'app o Docker:
+
+1. Copia `.env.example` in `.env`:  
+   `cp .env.example .env` (Linux/macOS) o rinomina/copia a mano su Windows.
+2. Apri `.env` e inserisci i valori per:
+   - **Docker**: `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` (obbligatorie per `docker-compose`).
+   - **Esecuzione locale** (Spring senza Docker): `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD` (es. `jdbc:postgresql://localhost:5434/programmers-api` se Postgres è in locale sulla porta 5434).
+
+Non committare mai il file `.env` (è in `.gitignore`).
+
 ### Example Usage
 
 ``` 
