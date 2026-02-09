@@ -27,7 +27,6 @@
 # Variabili d'ambiente: copia .env.example in .env e inserisci le credenziali (POSTGRES_USER,
 # POSTGRES_PASSWORD, POSTGRES_DB). Nessun dato sensibile va committato; vedi README.
 
-version: "3.9"
 
 services:
   # Servizio PRODUZIONE: immagine dal Dockerfile, nessun volume (deploy)
@@ -61,6 +60,7 @@ services:
       - dev
     ports:
       - "8080:8080"
+      - "5005:5005" # porta per il debugger
     depends_on:
       postgres:
         condition: service_healthy
@@ -69,6 +69,23 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      # ======================================================
+      # DEBUG REMOTO (server-dev)
+      # ------------------------------------------------------
+      # Questa variabile abilita l’agent di debug Java (JDWP)
+      # dentro al container, sulla porta 5005.
+      #
+      # Significato dei parametri:
+      # - transport=dt_socket  → comunicazione via socket TCP
+      # - server=y             → la JVM *aspetta* un debugger
+      # - suspend=n            → NON si blocca in attesa del debugger (l’app parte subito)
+      # - address=*:5005       → ascolta su tutte le interfacce del container sulla porta 5005
+      #
+      # Insieme al mapping porte "5005:5005" qui sopra, VS Code
+      # può collegarsi in attach all’app in esecuzione nel
+      # container (configurazione "Attach - Spring Boot (Docker :5005)" in launch.json).
+      # ======================================================
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
     volumes:
       # Monta template e static così le modifiche si vedono senza ricostruire l'immagine
       - ./src/main/resources/templates:/BOOT-INF/classes/templates
