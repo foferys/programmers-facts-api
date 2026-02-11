@@ -1,0 +1,4 @@
+# Mockito plugin config per questa suite:
+# usiamo "subclass" invece di "inline" per compatibilità più stabile
+# con alcune versioni Java/Byte Buddy durante i test Spring (@MockBean).
+mock-maker-subclass
